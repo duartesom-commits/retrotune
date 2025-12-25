@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameConfig, Question } from '../types';
 import { generateQuestions } from '../services/geminiService';
+import { audioService } from '../services/audioService';
 
 interface GameScreenProps {
   config: GameConfig;
@@ -21,7 +22,8 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
 
   useEffect(() => {
     const init = async () => {
-      const data = await generateQuestions(config.decade, 25, excludeIds);
+      // Pedimos 30 perguntas para garantir que temos bastantes para a duração
+      const data = await generateQuestions(config.decade, 30, excludeIds);
       setQuestions(data);
       setLoading(false);
     };
@@ -40,15 +42,20 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
   const handleSelect = (opt: string) => {
     if (revealed) return;
     const isCorrect = opt === questions[currentIdx].correctAnswer;
+    
     setSelected(opt);
     setRevealed(true);
     onQuestionAnswered(questions[currentIdx].id);
 
-    if (isCorrect) setScore(s => s + 1);
+    if (isCorrect) {
+      setScore(s => s + 1);
+      audioService.playCorrect();
+    } else {
+      audioService.playWrong();
+    }
 
     setTimeout(() => {
       if (currentIdx + 1 < questions.length) {
-        // Reset manual de estados internos para garantir transição limpa
         setSelected(null);
         setRevealed(false);
         setCurrentIdx(prev => prev + 1);
@@ -61,7 +68,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 animate-pulse">
       <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-xs font-black text-purple-400 uppercase tracking-widest">Sintonizando frequências...</p>
+      <p className="text-xs font-black text-purple-400 uppercase tracking-widest">A gerar perguntas...</p>
     </div>
   );
 
@@ -84,7 +91,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
       </div>
 
       <div className="bg-gray-800/80 backdrop-blur-sm p-8 rounded-3xl border-2 border-gray-700 mb-6 shadow-inner text-center">
-        <h2 className="text-xl font-bold text-white">{current.text}</h2>
+        <h2 className="text-xl font-bold text-white leading-relaxed">{current.text}</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-3">

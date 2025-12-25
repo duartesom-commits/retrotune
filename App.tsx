@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { GameState, GameConfig, PlayerScore } from './types';
 import SetupScreen from './components/SetupScreen';
 import GameScreen from './components/GameScreen';
 import Leaderboard from './components/Leaderboard';
+import { audioService } from './services/audioService';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.SETUP);
@@ -11,10 +13,10 @@ const App: React.FC = () => {
   const [highScores, setHighScores] = useState<PlayerScore[]>([]);
   const [playerName, setPlayerName] = useState('');
   const [playedIds, setPlayedIds] = useState<string[]>([]);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     try {
-      // Carregar dados persistentes
       const savedScores = localStorage.getItem('rt_scores');
       if (savedScores) setHighScores(JSON.parse(savedScores));
 
@@ -23,10 +25,33 @@ const App: React.FC = () => {
 
       const savedHistory = localStorage.getItem('rt_history_ids');
       if (savedHistory) setPlayedIds(JSON.parse(savedHistory));
+
+      const savedMute = localStorage.getItem('rt_muted');
+      if (savedMute) {
+        const muted = savedMute === 'true';
+        setIsMuted(muted);
+        audioService.setMuted(muted);
+      }
     } catch (e) {
       console.error("Erro ao carregar dados locais", e);
     }
   }, []);
+
+  const toggleMute = () => {
+    const nextMute = !isMuted;
+    setIsMuted(nextMute);
+    audioService.setMuted(nextMute);
+    localStorage.setItem('rt_muted', String(nextMute));
+  };
+
+  const resetScores = () => {
+    if (window.confirm("Desejas mesmo apagar todas as pontuações e o histórico de perguntas?")) {
+      setHighScores([]);
+      setPlayedIds([]);
+      localStorage.removeItem('rt_scores');
+      localStorage.removeItem('rt_history_ids');
+    }
+  };
 
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
@@ -54,7 +79,8 @@ const App: React.FC = () => {
   };
 
   const updateHistory = (id: string) => {
-    const updated = [...playedIds, id].slice(-500); // Manter as últimas 500 para evitar repetição
+    // Manter as últimas 1000 perguntas para garantir 0 repetições por muito tempo
+    const updated = [...playedIds, id].slice(-1000); 
     setPlayedIds(updated);
     localStorage.setItem('rt_history_ids', JSON.stringify(updated));
   };
@@ -65,6 +91,8 @@ const App: React.FC = () => {
       {gameState === GameState.SETUP && (
         <SetupScreen 
           initialName={playerName}
+          isMuted={isMuted}
+          onToggleMute={toggleMute}
           onStart={startGame} 
           onShowLeaderboard={() => setGameState(GameState.LEADERBOARD)} 
         />
@@ -109,10 +137,13 @@ const App: React.FC = () => {
       )}
 
       {gameState === GameState.LEADERBOARD && (
-        <Leaderboard scores={highScores} onBack={() => setGameState(GameState.SETUP)} />
+        <Leaderboard 
+          scores={highScores} 
+          onBack={() => setGameState(GameState.SETUP)} 
+          onReset={resetScores}
+        />
       )}
       
-      {/* Background Neon Glow */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-30">
          <div className="absolute top-[-5%] left-[-5%] w-[350px] h-[350px] bg-purple-900/40 rounded-full blur-[90px]"></div>
          <div className="absolute bottom-[-5%] right-[-5%] w-[350px] h-[350px] bg-indigo-900/40 rounded-full blur-[90px]"></div>

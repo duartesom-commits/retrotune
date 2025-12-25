@@ -1,13 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Decade, GameConfig } from '../types';
 
 interface SetupScreenProps {
   initialName: string;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onStart: (config: GameConfig) => void;
   onShowLeaderboard: () => void;
 }
 
-const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, onStart, onShowLeaderboard }) => {
+const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, isMuted, onToggleMute, onStart, onShowLeaderboard }) => {
   const [name, setName] = useState(initialName);
   const [decade, setDecade] = useState<Decade>('80s');
   const [duration, setDuration] = useState(1);
@@ -36,6 +39,23 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, onStart, onShowL
     <div className="flex flex-col items-center justify-center w-full max-w-sm p-5 md:p-8 mx-auto bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 relative overflow-hidden animate-fade-in">
       
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+
+      <div className="absolute top-4 right-4">
+        <button 
+          onClick={onToggleMute}
+          className="p-2 bg-gray-900/50 rounded-full hover:bg-gray-900 transition-colors border border-gray-700"
+        >
+          {isMuted ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.707 5.293a1 1 0 010 1.414 3 3 0 000 4.242 1 1 0 11-1.414 1.414 5 5 0 010-7.072 1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          )}
+        </button>
+      </div>
 
       <h1 className="text-3xl md:text-4xl font-black mb-6 md:mb-10 mt-2 text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-indigo-500 retro-font text-center leading-tight">
         RETRO<br className="md:hidden"/>TUNE
