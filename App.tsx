@@ -12,7 +12,7 @@ const App: React.FC = () => {
   const [lastScore, setLastScore] = useState(0);
   const [highScores, setHighScores] = useState<PlayerScore[]>([]);
   const [playerName, setPlayerName] = useState('');
-  const [playedIds, setPlayedIds] = useState<string[]>([]);
+  const [playedTexts, setPlayedTexts] = useState<string[]>([]);
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
@@ -23,8 +23,8 @@ const App: React.FC = () => {
       const savedName = localStorage.getItem('rt_player_name');
       if (savedName) setPlayerName(savedName);
 
-      const savedHistory = localStorage.getItem('rt_history_ids');
-      if (savedHistory) setPlayedIds(JSON.parse(savedHistory));
+      const savedHistory = localStorage.getItem('rt_history_texts');
+      if (savedHistory) setPlayedTexts(JSON.parse(savedHistory));
 
       const savedMute = localStorage.getItem('rt_muted');
       if (savedMute) {
@@ -47,9 +47,9 @@ const App: React.FC = () => {
   const resetScores = () => {
     if (window.confirm("Desejas mesmo apagar todas as pontuações e o histórico de perguntas?")) {
       setHighScores([]);
-      setPlayedIds([]);
+      setPlayedTexts([]);
       localStorage.removeItem('rt_scores');
-      localStorage.removeItem('rt_history_ids');
+      localStorage.removeItem('rt_history_texts');
     }
   };
 
@@ -78,11 +78,11 @@ const App: React.FC = () => {
     setGameState(GameState.FINISHED);
   };
 
-  const updateHistory = (id: string) => {
-    // Manter as últimas 1000 perguntas para garantir 0 repetições por muito tempo
-    const updated = [...playedIds, id].slice(-1000); 
-    setPlayedIds(updated);
-    localStorage.setItem('rt_history_ids', JSON.stringify(updated));
+  const updateHistory = (text: string) => {
+    // Guardamos o texto da pergunta para evitar repetição semântica via IA
+    const updated = [...playedTexts, text].slice(-100); 
+    setPlayedTexts(updated);
+    localStorage.setItem('rt_history_texts', JSON.stringify(updated));
   };
 
   return (
@@ -101,7 +101,7 @@ const App: React.FC = () => {
       {gameState === GameState.PLAYING && gameConfig && (
         <GameScreen 
           config={gameConfig} 
-          excludeIds={playedIds}
+          excludeTexts={playedTexts}
           onQuestionAnswered={updateHistory}
           onFinish={finishGame} 
         />

@@ -13,53 +13,41 @@ class AudioService {
     this.muted = muted;
   }
 
-  playCorrect() {
+  private playChime(frequencies: number[]) {
     if (this.muted) return;
     this.init();
     
-    // Criar um som de "blip-blup" mais suave usando ondas triangulares
-    const playNote = (freq: number, start: number, duration: number) => {
+    const now = this.ctx!.currentTime;
+    frequencies.forEach((freq, i) => {
+      const startTime = now + (i * 0.08);
+      const duration = 0.2;
+      
       const osc = this.ctx!.createOscillator();
       const gain = this.ctx!.createGain();
       
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.setValueAtTime(freq, startTime);
       
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(0.1, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.1, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
       
       osc.connect(gain);
       gain.connect(this.ctx!.destination);
       
-      osc.start(start);
-      osc.stop(start + duration);
-    };
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    });
+  }
 
-    const now = this.ctx!.currentTime;
-    playNote(523.25, now, 0.15); // C5
-    playNote(659.25, now + 0.08, 0.2); // E5
+  playCorrect() {
+    // Som ascendente: C5 -> E5
+    this.playChime([523.25, 659.25]);
   }
 
   playWrong() {
-    if (this.muted) return;
-    this.init();
-    const osc = this.ctx!.createOscillator();
-    const gain = this.ctx!.createGain();
-    
-    // Som de erro mais grave e curto
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(120, this.ctx!.currentTime);
-    osc.frequency.linearRampToValueAtTime(60, this.ctx!.currentTime + 0.2);
-    
-    gain.gain.setValueAtTime(0.08, this.ctx!.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, this.ctx!.currentTime + 0.2);
-    
-    osc.connect(gain);
-    gain.connect(this.ctx!.destination);
-    
-    osc.start();
-    osc.stop(this.ctx!.currentTime + 0.2);
+    // Som descendente: E5 -> C4 (mais grave para indicar erro)
+    this.playChime([659.25, 261.63]);
   }
 }
 

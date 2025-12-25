@@ -6,12 +6,12 @@ import { audioService } from '../services/audioService';
 
 interface GameScreenProps {
   config: GameConfig;
-  excludeIds: string[];
-  onQuestionAnswered: (id: string) => void;
+  excludeTexts: string[];
+  onQuestionAnswered: (text: string) => void;
   onFinish: (score: number) => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionAnswered, onFinish }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestionAnswered, onFinish }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -22,8 +22,9 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
 
   useEffect(() => {
     const init = async () => {
-      // Pedimos 30 perguntas para garantir que temos bastantes para a duração
-      const data = await generateQuestions(config.decade, 30, excludeIds);
+      // Pedimos perguntas baseadas na duração escolhida
+      const targetCount = config.durationMinutes * 8; // Aproximadamente 8 perguntas por minuto
+      const data = await generateQuestions(config.decade, Math.max(10, targetCount), excludeTexts);
       setQuestions(data);
       setLoading(false);
     };
@@ -45,7 +46,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
     
     setSelected(opt);
     setRevealed(true);
-    onQuestionAnswered(questions[currentIdx].id);
+    onQuestionAnswered(questions[currentIdx].text);
 
     if (isCorrect) {
       setScore(s => s + 1);
@@ -60,9 +61,9 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
         setRevealed(false);
         setCurrentIdx(prev => prev + 1);
       } else {
-        onFinish(score + (isCorrect ? 1 : 0));
+        onFinish(score + (isCorrect ? 0 : 0)); // A pontuação já foi somada no setScore
       }
-    }, 1000);
+    }, 1200);
   };
 
   if (loading) return (
@@ -90,7 +91,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeIds, onQuestionA
         </div>
       </div>
 
-      <div className="bg-gray-800/80 backdrop-blur-sm p-8 rounded-3xl border-2 border-gray-700 mb-6 shadow-inner text-center">
+      <div className="bg-gray-800/80 backdrop-blur-sm p-8 rounded-3xl border-2 border-gray-700 mb-6 shadow-inner text-center min-h-[140px] flex items-center justify-center">
         <h2 className="text-xl font-bold text-white leading-relaxed">{current.text}</h2>
       </div>
 
