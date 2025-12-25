@@ -98,7 +98,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, isMuted, onToggl
         <div>
           <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Duração</label>
           <div className="flex gap-1.5">
-             {[1, 2, 3, 5].map((m) => (
+             {[1, 2, 3].map((m) => (
                <button
                  key={m}
                  type="button"

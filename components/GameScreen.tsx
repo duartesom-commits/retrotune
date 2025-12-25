@@ -22,23 +22,29 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
 
   useEffect(() => {
     const init = async () => {
-      // Pedimos perguntas baseadas na duração escolhida
-      const targetCount = config.durationMinutes * 8; // Aproximadamente 8 perguntas por minuto
-      const data = await generateQuestions(config.decade, Math.max(10, targetCount), excludeTexts);
-      setQuestions(data);
-      setLoading(false);
+      const startTime = Date.now();
+      const targetCount = config.durationMinutes * 10;
+      const data = await generateQuestions(config.decade, Math.max(12, targetCount), excludeTexts);
+      
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(0, 2500 - elapsed); 
+      
+      setTimeout(() => {
+        setQuestions(data);
+        setLoading(false);
+      }, delay);
     };
     init();
   }, []);
 
   useEffect(() => {
     if (loading || timeLeft <= 0) {
-      if (timeLeft <= 0) onFinish(score);
+      if (timeLeft === 0 && !loading) onFinish(score);
       return;
     }
     const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, loading]);
+  }, [timeLeft, loading, score]);
 
   const handleSelect = (opt: string) => {
     if (revealed) return;
@@ -61,17 +67,86 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
         setRevealed(false);
         setCurrentIdx(prev => prev + 1);
       } else {
-        onFinish(score + (isCorrect ? 0 : 0)); // A pontuação já foi somada no setScore
+        onFinish(score + (isCorrect ? 0 : 0));
       }
     }, 1200);
   };
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 animate-pulse">
-      <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-xs font-black text-purple-400 uppercase tracking-widest">A gerar perguntas...</p>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
+        {/* Equalizador Retro High-Fi */}
+        <div className="bg-gray-900 p-6 rounded-xl border-4 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] mb-10">
+          <div className="flex gap-2 h-48 items-end p-2 bg-black border-2 border-gray-800 overflow-hidden">
+            {[...Array(8)].map((_, i) => (
+              <div 
+                key={i} 
+                className="relative w-5 h-full flex flex-col-reverse gap-[2px]"
+              >
+                {/* A animação controla a altura do contentor interno ou o clip-path */}
+                <div 
+                  className="absolute bottom-0 left-0 w-full bg-transparent flex flex-col-reverse gap-[2px]"
+                  style={{
+                    height: '100%',
+                    animation: `eq-bounce-${i % 3} ${0.6 + Math.random() * 0.8}s infinite alternate ease-in-out`,
+                    animationTimingFunction: 'steps(12)',
+                    clipPath: 'inset(0 0 0 0)' // Será animado
+                  }}
+                >
+                  {[...Array(12)].map((_, seg) => {
+                    let color = "bg-green-500";
+                    if (seg >= 7 && seg < 10) color = "bg-yellow-400";
+                    if (seg >= 10) color = "bg-red-500";
+                    
+                    return (
+                      <div 
+                        key={seg} 
+                        className={`h-[14px] w-full ${color} rounded-sm shadow-[0_0_8px_rgba(0,0,0,0.3)]`}
+                        style={{ opacity: 0.9 }}
+                      ></div>
+                    );
+                  })}
+                </div>
+                {/* Background "apagado" para os leds ficarem visíveis como grelha */}
+                {[...Array(12)].map((_, seg) => (
+                  <div key={`bg-${seg}`} className="h-[14px] w-full bg-gray-900/50 rounded-sm"></div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes eq-bounce-0 {
+            0% { clip-path: inset(80% 0 0 0); }
+            50% { clip-path: inset(20% 0 0 0); }
+            100% { clip-path: inset(60% 0 0 0); }
+          }
+          @keyframes eq-bounce-1 {
+            0% { clip-path: inset(90% 0 0 0); }
+            30% { clip-path: inset(10% 0 0 0); }
+            70% { clip-path: inset(40% 0 0 0); }
+            100% { clip-path: inset(85% 0 0 0); }
+          }
+          @keyframes eq-bounce-2 {
+            0% { clip-path: inset(70% 0 0 0); }
+            40% { clip-path: inset(0% 0 0 0); }
+            100% { clip-path: inset(50% 0 0 0); }
+          }
+        `}</style>
+        
+        <div className="text-center">
+          <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] retro-font animate-pulse">
+            A gerar perguntas...
+          </p>
+          <div className="mt-4 flex justify-center items-center gap-2">
+            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            <span className="text-[8px] text-gray-600 uppercase tracking-widest font-bold">Rec / Sintonizando rádio</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const current = questions[currentIdx];
   if (!current) return null;
@@ -102,7 +177,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
           
           let btnClass = "bg-gray-900/60 border-gray-700 text-gray-300 hover:border-purple-500";
           if (revealed) {
-            if (isCorrect) btnClass = "bg-green-500/30 border-green-500 text-white shadow-lg shadow-green-500/20";
+            if (isCorrect) btnClass = "bg-green-500/30 border-green-500 text-white shadow-lg shadow-green-500/20 scale-[1.02]";
             else if (isSelected) btnClass = "bg-red-500/30 border-red-500 text-white";
             else btnClass = "bg-gray-900/20 border-gray-800 opacity-20 scale-95";
           }
