@@ -9,6 +9,8 @@ export const GameState = {
 export type GameState = typeof GameState[keyof typeof GameState];
 
 export type Decade = '80s' | '90s' | '00s' | '2010s' | '2020s' | 'all';
+export type Category = 'portuguese' | 'international' | 'both';
+
 
 export interface Question {
   id: string;
@@ -17,12 +19,15 @@ export interface Question {
   correctAnswer: string;
   type: 'text';
   decade: Decade;
+  category: Category;
 }
 
 export interface PlayerScore {
   name: string;
   score: number;
   decade: Decade;
+  category: Category;
+  durationMinutes: number;
   date: string;
 }
 
@@ -30,4 +35,5 @@ export interface GameConfig {
   decade: Decade;
   durationMinutes: number;
   playerName: string;
+  category: Category;
 }
