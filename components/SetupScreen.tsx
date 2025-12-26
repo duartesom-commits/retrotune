@@ -170,7 +170,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, initialCategory,
         <div>
           <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Tempo de Sessão</label>
           <div className="flex gap-1.5" role="group" aria-label="Selecionar duração do jogo em minutos">
-             {[1, 2, 5].map((m) => (
+             {[1, 2, 3].map((m) => (
                <button
                  key={m}
                  type="button"

@@ -135,6 +135,15 @@ const App: React.FC = () => {
     localStorage.setItem('rt_muted', String(nextMute));
   };
 
+  const resetScores = (duration: number) => {
+    const confirmMessage = `Desejas apagar todos os recordes da categoria de ${duration} minuto${duration > 1 ? 's' : ''}?`;
+    if (window.confirm(confirmMessage)) {
+      const updatedScores = highScores.filter(s => Number(s.durationMinutes) !== Number(duration));
+      setHighScores(updatedScores);
+      localStorage.setItem('rt_scores_v2', JSON.stringify(updatedScores));
+    }
+  };
+
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
     setPlayerName(config.playerName);
@@ -252,6 +261,7 @@ const App: React.FC = () => {
         <Leaderboard 
           scores={highScores} 
           onBack={() => setGameState(GameState.SETUP)} 
+          onReset={resetScores}
         />
       )}
       

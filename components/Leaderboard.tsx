@@ -5,10 +5,11 @@ import { PlayerScore, Category } from '../types';
 interface LeaderboardProps {
   scores: PlayerScore[];
   onBack: () => void;
+  onReset: (duration: number) => void;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ scores, onBack }) => {
-  const [activeTab, setActiveTab] = useState<number>(1); // Tempo selecionado (1, 2 ou 5 min)
+const Leaderboard: React.FC<LeaderboardProps> = ({ scores, onBack, onReset }) => {
+  const [activeTab, setActiveTab] = useState<number>(1); // Tempo selecionado (1, 2 ou 3 min)
 
   const formatCategory = (c: Category) => {
     if (c === 'portuguese') return 'PT';
@@ -49,11 +50,18 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ scores, onBack }) => {
               TOP CHARTS
             </h2>
           </div>
+          {/* Botão Limpar */}
+          <button 
+            onClick={() => onReset(activeTab)}
+            className="text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest border border-red-900/30 px-3 py-1.5 rounded-lg transition-all hover:bg-red-500/10"
+          >
+            LIMPAR {activeTab}M
+          </button>
         </div>
 
         {/* Tabs de Duração */}
         <div className="flex gap-2 p-1 bg-gray-950 rounded-xl">
-          {[1, 2, 5].map(min => (
+          {[1, 2, 3].map(min => (
             <button
               key={min}
               onClick={() => setActiveTab(min)}
