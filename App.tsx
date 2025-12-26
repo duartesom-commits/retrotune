@@ -225,7 +225,6 @@ const App: React.FC = () => {
           excludeTexts={playedTexts}
           onQuestionAnswered={updateHistory}
           onFinish={finishGame} 
-          onHome={goToHome}
         />
       )}
 
@@ -268,12 +267,6 @@ const App: React.FC = () => {
                className="w-full py-4 bg-gray-700 rounded-xl font-black text-[10px] retro-font hover:bg-gray-600 transition-all uppercase"
              >
                Jogar Novamente
-             </button>
-             <button 
-               onClick={goToHome}
-               className="w-full py-3 text-[9px] font-black text-gray-400 hover:text-white uppercase tracking-widest transition-all"
-             >
-               Voltar ao Início
              </button>
            </div>
         </div>
