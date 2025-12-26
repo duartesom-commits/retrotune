@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GameState, GameConfig, PlayerScore, Category } from './types';
+import { GameState, GameConfig, PlayerScore, Category, Decade } from './types';
 import SetupScreen from './components/SetupScreen';
 import GameScreen from './components/GameScreen';
 import Leaderboard from './components/Leaderboard';
@@ -86,6 +86,8 @@ const App: React.FC = () => {
   const [highScores, setHighScores] = useState<PlayerScore[]>([]);
   const [playerName, setPlayerName] = useState('');
   const [gameCategory, setGameCategory] = useState<Category>('both');
+  const [gameDecade, setGameDecade] = useState<Decade>('80s');
+  const [gameDuration, setGameDuration] = useState<number>(1);
   const [playedTexts, setPlayedTexts] = useState<string[]>([]);
   const [isMuted, setIsMuted] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(false);
@@ -95,17 +97,6 @@ const App: React.FC = () => {
       const savedScores = localStorage.getItem('rt_scores_v2');
       if (savedScores) {
         setHighScores(JSON.parse(savedScores));
-      } else {
-        const oldScores = localStorage.getItem('rt_scores');
-        if (oldScores) {
-          const parsed = JSON.parse(oldScores).map((s: any) => ({ 
-            ...s, 
-            durationMinutes: Number(s.durationMinutes) || 1 
-          }));
-          setHighScores(parsed);
-          localStorage.setItem('rt_scores_v2', JSON.stringify(parsed));
-          localStorage.removeItem('rt_scores');
-        }
       }
 
       const savedName = localStorage.getItem('rt_player_name');
@@ -113,6 +104,12 @@ const App: React.FC = () => {
 
       const savedCategory = localStorage.getItem('rt_game_category');
       if (savedCategory) setGameCategory(savedCategory as Category);
+
+      const savedDecade = localStorage.getItem('rt_game_decade');
+      if (savedDecade) setGameDecade(savedDecade as Decade);
+
+      const savedDuration = localStorage.getItem('rt_game_duration');
+      if (savedDuration) setGameDuration(Number(savedDuration));
 
       const savedHistory = localStorage.getItem('rt_history_texts');
       if (savedHistory) setPlayedTexts(JSON.parse(savedHistory));
@@ -148,9 +145,16 @@ const App: React.FC = () => {
     setGameConfig(config);
     setPlayerName(config.playerName);
     setGameCategory(config.category);
+    setGameDecade(config.decade);
+    setGameDuration(config.durationMinutes);
     setIsNewRecord(false);
+    
+    // Persistência local para próxima sessão
     localStorage.setItem('rt_player_name', config.playerName);
     localStorage.setItem('rt_game_category', config.category);
+    localStorage.setItem('rt_game_decade', config.decade);
+    localStorage.setItem('rt_game_duration', String(config.durationMinutes));
+    
     setGameState(GameState.PLAYING);
   };
 
@@ -197,6 +201,8 @@ const App: React.FC = () => {
         <SetupScreen 
           initialName={playerName}
           initialCategory={gameCategory}
+          initialDecade={gameDecade}
+          initialDuration={gameDuration}
           isMuted={isMuted}
           onToggleMute={toggleMute}
           onStart={startGame} 
@@ -262,6 +268,7 @@ const App: React.FC = () => {
           scores={highScores} 
           onBack={() => setGameState(GameState.SETUP)} 
           onReset={resetScores}
+          initialDuration={gameDuration}
         />
       )}
       

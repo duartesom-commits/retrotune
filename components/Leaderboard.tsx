@@ -1,15 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerScore, Category } from '../types';
 
 interface LeaderboardProps {
   scores: PlayerScore[];
   onBack: () => void;
   onReset: (duration: number) => void;
+  initialDuration?: number;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ scores, onBack, onReset }) => {
-  const [activeTab, setActiveTab] = useState<number>(1); // Tempo selecionado (1, 2 ou 3 min)
+const Leaderboard: React.FC<LeaderboardProps> = ({ scores, onBack, onReset, initialDuration }) => {
+  const [activeTab, setActiveTab] = useState<number>(initialDuration || 1);
+
+  useEffect(() => {
+    if (initialDuration) {
+      setActiveTab(initialDuration);
+    }
+  }, [initialDuration]);
 
   const formatCategory = (c: Category) => {
     if (c === 'portuguese') return 'PT';

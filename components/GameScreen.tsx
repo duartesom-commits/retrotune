@@ -24,10 +24,13 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
     const init = async () => {
       const startTime = Date.now();
       const targetCount = config.durationMinutes * 10;
+      
       const data = await generateQuestions(config.decade, config.category, Math.max(12, targetCount), excludeTexts);
       
       const elapsed = Date.now() - startTime;
-      const delay = Math.max(0, 1000 - elapsed); 
+      const minAnimation = 1200;
+      const maxAnimation = 3000;
+      const delay = Math.min(maxAnimation, Math.max(minAnimation, minAnimation - elapsed)); 
       
       setTimeout(() => {
         setQuestions(data);
@@ -73,6 +76,13 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
   };
 
   if (loading) {
+    const formatDecade = (d: string) => {
+      if (d === 'all') return 'Todas as Décadas';
+      if (d === '2010s') return 'Anos 10';
+      if (d === '2020s') return 'Anos 20';
+      return `Anos ${d.replace('s', '')}`;
+    };
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] w-full max-w-md mx-auto">
         <div className="bg-gray-900 p-6 rounded-xl border-4 border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] mb-10 w-full">
@@ -109,9 +119,11 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
         `}</style>
         <div className="text-center" role="status" aria-live="polite">
           <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] retro-font animate-pulse">A gerar perguntas...</p>
-          <div className="mt-4 flex justify-center items-center gap-2">
-            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-            <span className="text-[8px] text-gray-600 uppercase tracking-widest font-bold">Rec / Sintonizando rádio</span>
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <span className="text-[8px] text-gray-500 uppercase tracking-widest font-black">Referente aos</span>
+            <span className="px-4 py-1.5 bg-indigo-900/40 rounded-full border border-indigo-500/30 text-[9px] text-indigo-400 font-black uppercase tracking-widest animate-fade-in">
+              {formatDecade(config.decade)}
+            </span>
           </div>
         </div>
       </div>

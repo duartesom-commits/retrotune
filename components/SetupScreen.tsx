@@ -5,29 +5,37 @@ import { Decade, GameConfig, Category } from '../types';
 interface SetupScreenProps {
   initialName: string;
   initialCategory: Category;
+  initialDecade: Decade;
+  initialDuration: number;
   isMuted: boolean;
   onToggleMute: () => void;
   onStart: (config: GameConfig) => void;
   onShowLeaderboard: () => void;
 }
 
-const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, initialCategory, isMuted, onToggleMute, onStart, onShowLeaderboard }) => {
+const SetupScreen: React.FC<SetupScreenProps> = ({ 
+  initialName, 
+  initialCategory, 
+  initialDecade, 
+  initialDuration, 
+  isMuted, 
+  onToggleMute, 
+  onStart, 
+  onShowLeaderboard 
+}) => {
   const [name, setName] = useState(initialName);
-  const [decade, setDecade] = useState<Decade>('80s');
+  const [decade, setDecade] = useState<Decade>(initialDecade);
   const [category, setCategory] = useState<Category>(initialCategory);
-  const [duration, setDuration] = useState(1);
+  const [duration, setDuration] = useState(initialDuration);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   const infoButtonRef = useRef<HTMLButtonElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   
-  useEffect(() => {
-    setName(initialName);
-  }, [initialName]);
-
-  useEffect(() => {
-    setCategory(initialCategory);
-  }, [initialCategory]);
+  useEffect(() => { setName(initialName); }, [initialName]);
+  useEffect(() => { setCategory(initialCategory); }, [initialCategory]);
+  useEffect(() => { setDecade(initialDecade); }, [initialDecade]);
+  useEffect(() => { setDuration(initialDuration); }, [initialDuration]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +86,6 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ initialName, initialCategory,
       
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
 
-      {/* Botões de Controlo nos Cantos Superiores */}
       <button 
         onClick={onToggleMute}
         className="absolute top-6 left-6 p-2.5 bg-gray-900/50 rounded-full hover:bg-gray-900 transition-colors border border-gray-700 z-10"
