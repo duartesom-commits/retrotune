@@ -9,9 +9,10 @@ interface GameScreenProps {
   excludeTexts: string[];
   onQuestionAnswered: (text: string) => void;
   onFinish: (score: number) => void;
+  onHome: () => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestionAnswered, onFinish }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestionAnswered, onFinish, onHome }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -73,6 +74,12 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
         onFinish(score + (isCorrect ? 0 : 0));
       }
     }, 1200);
+  };
+
+  const quitGame = () => {
+    if (window.confirm("Desejas sair do concerto? O progresso não será gravado.")) {
+      onHome();
+    }
   };
 
   if (loading) {
@@ -148,6 +155,15 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em]">Tempo</span>
             <span className={`text-2xl font-mono font-black ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
           </div>
+          <button 
+            onClick={quitGame}
+            className="p-2 bg-gray-900/50 rounded-lg border border-gray-700 hover:bg-red-900/20 transition-colors"
+            aria-label="Sair do jogo"
+          >
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+            </svg>
+          </button>
           <div className="flex flex-col items-end">
             <span className="text-[8px] font-black text-yellow-500 uppercase tracking-[0.2em]">Pontos</span>
             <span className="text-2xl font-mono font-black text-yellow-400">{score}</span>
@@ -160,7 +176,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
         </div>
       </div>
 
-      <div className="mt-20 w-full">
+      <div className="mt-24 w-full px-2">
         <div className="bg-gray-800/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-gray-700 mb-6 shadow-inner text-center min-h-[140px] flex items-center justify-center">
           <h2 id="current-question" className="text-lg md:text-xl font-bold text-white leading-relaxed">{current.text}</h2>
         </div>
@@ -177,7 +193,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
             return (
               <button key={`${current.id}-opt-${i}`} onClick={() => handleSelect(opt)} disabled={revealed} className={`w-full p-4 md:p-5 text-left rounded-2xl border-2 font-bold transition-all duration-200 flex items-center ${btnClass}`}>
                 <span className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center mr-4 text-xs font-black text-gray-500">{String.fromCharCode(65 + i)}</span>
-                <span className="flex-1">{opt}</span>
+                <span className="flex-1 text-sm md:text-base">{opt}</span>
               </button>
             );
           })}

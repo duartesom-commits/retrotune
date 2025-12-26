@@ -11,6 +11,7 @@ interface SetupScreenProps {
   onToggleMute: () => void;
   onStart: (config: GameConfig) => void;
   onShowLeaderboard: () => void;
+  onHome: () => void;
 }
 
 const SetupScreen: React.FC<SetupScreenProps> = ({ 
@@ -21,7 +22,8 @@ const SetupScreen: React.FC<SetupScreenProps> = ({
   isMuted, 
   onToggleMute, 
   onStart, 
-  onShowLeaderboard 
+  onShowLeaderboard,
+  onHome
 }) => {
   const [name, setName] = useState(initialName);
   const [decade, setDecade] = useState<Decade>(initialDecade);
@@ -86,21 +88,32 @@ const SetupScreen: React.FC<SetupScreenProps> = ({
       
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
 
-      <button 
-        onClick={onToggleMute}
-        className="absolute top-6 left-6 p-2.5 bg-gray-900/50 rounded-full hover:bg-gray-900 transition-colors border border-gray-700 z-10"
-        aria-label={isMuted ? "Desmutar som" : "Mutar som"}
-      >
-        {isMuted ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd" />
+      <div className="absolute top-6 left-6 flex gap-2 z-10">
+        <button 
+          onClick={onHome}
+          className="p-2.5 bg-gray-900/50 rounded-full hover:bg-gray-900 transition-colors border border-gray-700"
+          aria-label="Voltar para o início"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-cyan-400" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
           </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.707 5.293a1 1 0 010 1.414 3 3 0 000 4.242 1 1 0 11-1.414 1.414 5 5 0 010-7.072 1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-        )}
-      </button>
+        </button>
+        <button 
+          onClick={onToggleMute}
+          className="p-2.5 bg-gray-900/50 rounded-full hover:bg-gray-900 transition-colors border border-gray-700"
+          aria-label={isMuted ? "Desmutar som" : "Mutar som"}
+        >
+          {isMuted ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.707 5.293a1 1 0 010 1.414 3 3 0 000 4.242 1 1 0 11-1.414 1.414 5 5 0 010-7.072 1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          )}
+        </button>
+      </div>
 
       <button 
         onClick={openInfoModal}

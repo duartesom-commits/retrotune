@@ -4,6 +4,7 @@ import { GameState, GameConfig, PlayerScore, Category, Decade } from './types';
 import SetupScreen from './components/SetupScreen';
 import GameScreen from './components/GameScreen';
 import Leaderboard from './components/Leaderboard';
+import LandingPage from './components/LandingPage';
 import { audioService } from './services/audioService';
 
 const RetroFireworks: React.FC = () => {
@@ -80,7 +81,7 @@ const RetroFireworks: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>(GameState.SETUP);
+  const [gameState, setGameState] = useState<GameState>(GameState.LANDING);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastScore, setLastScore] = useState(0);
   const [highScores, setHighScores] = useState<PlayerScore[]>([]);
@@ -149,7 +150,6 @@ const App: React.FC = () => {
     setGameDuration(config.durationMinutes);
     setIsNewRecord(false);
     
-    // Persistência local para próxima sessão
     localStorage.setItem('rt_player_name', config.playerName);
     localStorage.setItem('rt_game_category', config.category);
     localStorage.setItem('rt_game_decade', config.decade);
@@ -194,9 +194,17 @@ const App: React.FC = () => {
     localStorage.setItem('rt_history_texts', JSON.stringify(updated));
   };
 
+  const goToHome = () => {
+    setGameState(GameState.LANDING);
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#0a0a0f] text-white flex flex-col items-center justify-start pt-4 md:pt-10 px-4 overflow-x-hidden">
       
+      {gameState === GameState.LANDING && (
+        <LandingPage onEnter={() => setGameState(GameState.SETUP)} />
+      )}
+
       {gameState === GameState.SETUP && (
         <SetupScreen 
           initialName={playerName}
@@ -207,6 +215,7 @@ const App: React.FC = () => {
           onToggleMute={toggleMute}
           onStart={startGame} 
           onShowLeaderboard={() => setGameState(GameState.LEADERBOARD)} 
+          onHome={goToHome}
         />
       )}
 
@@ -216,6 +225,7 @@ const App: React.FC = () => {
           excludeTexts={playedTexts}
           onQuestionAnswered={updateHistory}
           onFinish={finishGame} 
+          onHome={goToHome}
         />
       )}
 
@@ -258,6 +268,12 @@ const App: React.FC = () => {
                className="w-full py-4 bg-gray-700 rounded-xl font-black text-[10px] retro-font hover:bg-gray-600 transition-all uppercase"
              >
                Jogar Novamente
+             </button>
+             <button 
+               onClick={goToHome}
+               className="w-full py-3 text-[9px] font-black text-gray-400 hover:text-white uppercase tracking-widest transition-all"
+             >
+               Voltar ao Início
              </button>
            </div>
         </div>

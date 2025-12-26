@@ -1,5 +1,6 @@
 
 export const GameState = {
+  LANDING: 'LANDING',
   SETUP: 'SETUP',
   PLAYING: 'PLAYING',
   FINISHED: 'FINISHED',
