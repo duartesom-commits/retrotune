@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameConfig, Question } from '../types';
 import { generateQuestions } from '../services/geminiService';
 import { audioService } from '../services/audioService';
@@ -17,45 +17,61 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(config.durationMinutes * 60);
   const [loading, setLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
+  
+  const historyRef = useRef<string[]>(excludeTexts);
 
+  // Inicialização
   useEffect(() => {
     const init = async () => {
-      const startTime = Date.now();
-      const targetCount = config.durationMinutes * 10;
-      
-      const data = await generateQuestions(config.decade, config.category, Math.max(12, targetCount), excludeTexts);
-      
-      const elapsed = Date.now() - startTime;
-      const minAnimation = 1200;
-      const maxAnimation = 3000;
-      const delay = Math.min(maxAnimation, Math.max(minAnimation, minAnimation - elapsed)); 
-      
-      setTimeout(() => {
-        setQuestions(data);
-        setLoading(false);
-      }, delay);
+      // Pedimos uma quantidade generosa inicial (25 por minuto de jogo)
+      const data = await generateQuestions(config.decade, config.category, config.durationMinutes * 25, historyRef.current);
+      setQuestions(data);
+      setLoading(false);
     };
     init();
   }, [config.decade, config.category]);
 
+  // Cronómetro Central - Única fonte de encerramento do jogo
   useEffect(() => {
     if (loading || timeLeft <= 0) {
-      if (timeLeft === 0 && !loading) onFinish(score);
+      if (timeLeft === 0 && !loading) {
+        onFinish(score);
+      }
       return;
     }
     const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [timeLeft, loading, score]);
 
+  // Fetch de mais perguntas em background para evitar que acabem
+  const fetchMoreQuestions = async () => {
+    if (isFetchingMore) return;
+    setIsFetchingMore(true);
+    try {
+      const more = await generateQuestions(config.decade, config.category, 10, historyRef.current);
+      setQuestions(prev => [...prev, ...more]);
+    } catch (e) {
+      console.warn("Erro ao buscar mais questões.");
+    } finally {
+      setIsFetchingMore(false);
+    }
+  };
+
   const handleSelect = (opt: string) => {
-    if (revealed) return;
-    const isCorrect = opt === questions[currentIdx].correctAnswer;
+    if (revealed || timeLeft <= 0) return;
+    
+    const currentQ = questions[currentIdx];
+    if (!currentQ) return;
+
+    const isCorrect = opt === currentQ.correctAnswer;
     
     setSelected(opt);
     setRevealed(true);
-    onQuestionAnswered(questions[currentIdx].text);
+    onQuestionAnswered(currentQ.text);
+    historyRef.current = [...historyRef.current, currentQ.text];
 
     if (isCorrect) {
       setScore(s => s + 1);
@@ -64,13 +80,25 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
       audioService.playWrong();
     }
 
+    // Avançar ou repor perguntas
     setTimeout(() => {
-      if (currentIdx + 1 < questions.length) {
+      const nextIdx = currentIdx + 1;
+      
+      // Se estivermos a chegar ao fim das perguntas carregadas, pedir mais em background
+      if (nextIdx >= questions.length - 3) {
+        fetchMoreQuestions();
+      }
+
+      // Se por algum motivo as perguntas acabarem antes do tempo, voltamos ao início (shuffle) ou esperamos o fetch
+      if (nextIdx < questions.length) {
         setSelected(null);
         setRevealed(false);
-        setCurrentIdx(prev => prev + 1);
+        setCurrentIdx(nextIdx);
       } else {
-        onFinish(score + (isCorrect ? 0 : 0));
+        // Fallback caso a rede falhe e não haja mais perguntas: reciclar as atuais mas com shuffle
+        setSelected(null);
+        setRevealed(false);
+        setCurrentIdx(0);
       }
     }, 1200);
   };
@@ -102,7 +130,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
                     let color = "bg-green-500";
                     if (seg >= 7 && seg < 10) color = "bg-yellow-400";
                     if (seg >= 10) color = "bg-red-500";
-                    return <div key={seg} className={`h-[14px] w-full ${color} rounded-sm shadow-[0_0_8px_rgba(0,0,0,0.3)] opacity-90`}></div>;
+                    return <div key={seg} className={`h-[14px] w-full ${color} rounded-sm opacity-90`}></div>;
                   })}
                 </div>
                 {[...Array(12)].map((_, seg) => (
@@ -112,20 +140,20 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
             ))}
           </div>
         </div>
+        <div className="text-center">
+          <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] retro-font animate-pulse">A preparar o palco...</p>
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <span className="text-[8px] text-gray-500 uppercase tracking-widest font-black">Referente aos</span>
+            <span className="px-4 py-1.5 bg-indigo-900/40 rounded-full border border-indigo-500/30 text-[9px] text-indigo-400 font-black uppercase tracking-widest">
+              {formatDecade(config.decade)}
+            </span>
+          </div>
+        </div>
         <style>{`
           @keyframes eq-bounce-0 { 0% { clip-path: inset(80% 0 0 0); } 50% { clip-path: inset(20% 0 0 0); } 100% { clip-path: inset(60% 0 0 0); } }
           @keyframes eq-bounce-1 { 0% { clip-path: inset(90% 0 0 0); } 30% { clip-path: inset(10% 0 0 0); } 70% { clip-path: inset(40% 0 0 0); } 100% { clip-path: inset(85% 0 0 0); } }
           @keyframes eq-bounce-2 { 0% { clip-path: inset(70% 0 0 0); } 40% { clip-path: inset(0% 0 0 0); } 100% { clip-path: inset(50% 0 0 0); } }
         `}</style>
-        <div className="text-center" role="status" aria-live="polite">
-          <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] retro-font animate-pulse">A gerar perguntas...</p>
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <span className="text-[8px] text-gray-500 uppercase tracking-widest font-black">Referente aos</span>
-            <span className="px-4 py-1.5 bg-indigo-900/40 rounded-full border border-indigo-500/30 text-[9px] text-indigo-400 font-black uppercase tracking-widest animate-fade-in">
-              {formatDecade(config.decade)}
-            </span>
-          </div>
-        </div>
       </div>
     );
   }
@@ -148,7 +176,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em]">Tempo</span>
             <span className={`text-2xl font-mono font-black ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
           </div>
-          {/* Quit button removed from here to follow the request: button only on setup screen */}
           <div className="flex flex-col items-end">
             <span className="text-[8px] font-black text-yellow-500 uppercase tracking-[0.2em]">Pontos</span>
             <span className="text-2xl font-mono font-black text-yellow-400">{score}</span>
@@ -165,7 +192,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
         <div className="bg-gray-800/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-gray-700 mb-6 shadow-inner text-center min-h-[140px] flex items-center justify-center">
           <h2 id="current-question" className="text-lg md:text-xl font-bold text-white leading-relaxed">{current.text}</h2>
         </div>
-        <div className="grid grid-cols-1 gap-3" role="radiogroup" aria-labelledby="current-question">
+        <div className="grid grid-cols-1 gap-3">
           {current.options.map((opt, i) => {
             const isCorrect = opt === current.correctAnswer;
             const isSelected = selected === opt;
@@ -183,6 +210,11 @@ const GameScreen: React.FC<GameScreenProps> = ({ config, excludeTexts, onQuestio
             );
           })}
         </div>
+        {isFetchingMore && (
+          <div className="mt-4 text-center">
+             <span className="text-[8px] font-black text-gray-600 animate-pulse uppercase tracking-widest">A carregar mais temas...</span>
+          </div>
+        )}
       </div>
     </div>
   );
